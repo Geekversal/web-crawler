@@ -1,3 +1,3 @@
 # web-crawler
 CSDN crawler
-输入关键词，开始爬取的页数，以及终止的页数
+CSDN1：爬取单个网页，提取title以及content
