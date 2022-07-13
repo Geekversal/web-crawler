@@ -11,6 +11,7 @@ class SearchSpider(scrapy.Spider):
     # start_urls = ['http://csdn.net/']
     rec=re.compile(r'<em>|</em>')
 
+    # p = {} for starting 4 pages, p = 5/6/7 for other pages.
     url='https://so.csdn.net/api/v2/search?q=人工智能&t=all&p={}&s=0&tm=0&lv=-1&ft=0&l=&u=&platform=pc'
 
     def start_requests(self):
