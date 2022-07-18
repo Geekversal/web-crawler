@@ -3,27 +3,30 @@ import json
 import scrapy
 from csdnSpider.items import CsdnspiderItem
 import re
-
+import urllib.parse
+import w3lib.html
 
 class SearchSpider(scrapy.Spider):
     name = 'search_spider'
-    # allowed_domains = ['csdn.net']
-    # start_urls = ['http://csdn.net/']
     rec=re.compile(r'<em>|</em>')
+    url = 'https://so.csdn.net/api/v2/search?q={}&t=all&p={}&s=0&tm=0&lv=-1&ft=0&l=&u=&platform=pc'
 
-    # p = {} for starting 4 pages, p = 5/6/7 for other pages.
-    url='https://so.csdn.net/api/v2/search?q=人工智能&t=all&p={}&s=0&tm=0&lv=-1&ft=0&l=&u=&platform=pc'
+    def __init__(self, keyword='AI', pages = '20', startPage = '1', **kwargs):
+        self.keyword = keyword
+        self.pages = int(pages)
+        self.startPage = int(startPage)
 
+    #Scrape the multiple pages
     def start_requests(self):
-        #开启多个线程 爬取多页
-        for i in range(1,5,1):
-            url=self.url.format(i)
+        for i in range(self.startPage, self.startPage + self.pages,1):
+            url=self.url.format(urllib.parse.quote(self.keyword) ,i)
             yield scrapy.Request(
                 url=url,
                 callback=self.parse
             )
+
+    # Get meta data and save it to item
     def parse(self, response):
-        # 取接口返回数据，存入item
         res=json.loads(response.text)
         result_vos=res.get('result_vos')
         for i in result_vos:
@@ -32,5 +35,25 @@ class SearchSpider(scrapy.Spider):
             item['title']=re.sub(self.rec,'',i['title']  if 'title' in i and  i['title']!=None else '')
             item['description']=re.sub(self.rec,'',i['description']  if 'description' in i and  i['description']!=None else '')
             item['url']=re.sub(self.rec,'',i['url']  if 'url' in i and  i['url']!=None else '')
+            # Follow the url to get the detail page
+            yield scrapy.Request(
+                url=item['url'],
+                callback=self.parse_detail,
+                meta={'csdnspideritem':item}
+            )
 
-            yield item
+    # Get detail page content and save it to item
+    def parse_detail(self, response):
+        item=response.meta['csdnspideritem']
+        content=response.xpath('//*[@id="article_content"]').extract_first()
+        # Exclude code sections
+        codeSections = response.xpath('//*[@id="content_views"]/pre')
+        for codeSec in codeSections:
+            content=content.replace(codeSec.extract(),'')
+
+        # Clean up the content
+        content = content.strip().replace('\n','').replace('\r','').replace('\t','')
+        content = re.sub(r'\s+',' ',content)
+        # Remove all the tags and keep the text
+        item['content']=w3lib.html.remove_tags(content)
+        yield item

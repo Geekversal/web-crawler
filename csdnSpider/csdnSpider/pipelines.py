@@ -7,22 +7,22 @@
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
 import csv
+from os.path import exists
 
 class CsdnspiderPipeline:
-    f=None
     def open_spider(self, spider):
-        self.f = open(r'./data.csv', 'a+',newline="", encoding='utf-8')
-        # 设置文件第一行的字段名，注意要跟spider传过来的字典key名称相同
-        self.fieldnames = ["nickname", "title", "description", "url"]
-        # 指定文件的写入方式为csv字典写入，参数1为指定具体文件，参数2为指定字段名
+        file = r'./'+ spider.keyword + '_data.csv'
+        exist = exists(file)
+        self.f = open(file, 'a+',newline="", encoding='utf-8')
+        # Write headers of the csv file if it doesn't exist
+        self.fieldnames = ["nickname", "title", "description", "url", "content"]
         self.writer = csv.DictWriter(self.f, fieldnames=self.fieldnames)
-        # 写入第一行字段名，因为只要写入一次
-        self.writer.writeheader()
+        if not exist:
+            self.writer.writeheader()
 
     def process_item(self, item, spider):
         self.writer.writerow(item)
         return item
 
     def close_spider(self, spider):
-        # 爬虫执行完毕后，将数据写入数据库
         self.f.close()

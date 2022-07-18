@@ -12,3 +12,4 @@ class CsdnspiderItem(scrapy.Item):
     title = scrapy.Field()
     description = scrapy.Field()
     url = scrapy.Field()
+    content = scrapy.Field()
