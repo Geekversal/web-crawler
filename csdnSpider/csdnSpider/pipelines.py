@@ -11,7 +11,7 @@ from os.path import exists
 
 class CsdnspiderPipeline:
     def open_spider(self, spider):
-        file = r'./'+ spider.keyword + '_data.csv'
+        file = spider.saveDir + spider.keyword + '_data.csv'
         exist = exists(file)
         self.f = open(file, 'a+',newline="", encoding='utf-8')
         # Write headers of the csv file if it doesn't exist

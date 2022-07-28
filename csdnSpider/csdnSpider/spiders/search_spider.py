@@ -9,12 +9,13 @@ import w3lib.html
 class SearchSpider(scrapy.Spider):
     name = 'search_spider'
     rec=re.compile(r'<em>|</em>')
-    url = 'https://so.csdn.net/api/v2/search?q={}&t=all&p={}&s=0&tm=0&lv=-1&ft=0&l=&u=&platform=pc'
+    url = 'https://so.csdn.net/api/v3/search?q={}&t=blog&p={}&s=0&tm=0&lv=-1&ft=0&l=&u=&platform=pc'
 
-    def __init__(self, keyword='AI', pages = '20', startPage = '1', **kwargs):
+    def __init__(self, keyword='AI', pages = '20', startPage = '1', saveDir = "./", **kwargs):
         self.keyword = keyword
         self.pages = int(pages)
         self.startPage = int(startPage)
+        self.saveDir = saveDir
 
     #Scrape the multiple pages
     def start_requests(self):
@@ -34,7 +35,7 @@ class SearchSpider(scrapy.Spider):
             item['nickname']=re.sub(self.rec,'',i['nickname'] if 'nickname' in i and i['nickname']!=None else '')
             item['title']=re.sub(self.rec,'',i['title']  if 'title' in i and  i['title']!=None else '')
             item['description']=re.sub(self.rec,'',i['description']  if 'description' in i and  i['description']!=None else '')
-            item['url']=re.sub(self.rec,'',i['url']  if 'url' in i and  i['url']!=None else '')
+            item['url']=re.sub(self.rec,'',i['url_location']  if 'url_location' in i and  i['url_location']!=None else '')
             # Follow the url to get the detail page
             yield scrapy.Request(
                 url=item['url'],
